@@ -27,12 +27,15 @@ def collect_targets url, context = url
 
 
   local_targets = all("a").map{|a| a[:href]} \
-    .map{|href| Addressable::URI.parse(href)} \
+    .map{|href| Addressable::URI.parse(href) rescue nil} \
+    .compact \
     .map{|t| current_uri + t } \
     .map(&:normalize)
 
   local_targets.each do |target|
-    if (Capybara.app_host == target.site) and (target.path.starts_with? context)
+    if (Capybara.app_host == target.site) \
+        and (target.path.starts_with? context) \
+        and (/xml$/ !~ target.path)
       unless @internal_pages [target.path]
         initialize_path target.path
         collect_targets target, context
