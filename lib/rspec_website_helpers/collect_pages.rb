@@ -45,7 +45,9 @@ def collect_targets url, context = url
       end
       @internal_pages[target.path][:referer].add current_uri.path
     else
-      @external_uris.add(target)
+      unless target.host == 'localhost'
+        @external_uris.add(target)
+      end
     end
   end
 end
