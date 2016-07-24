@@ -40,7 +40,12 @@ RSpec::Matchers.define :pass_spellcheck do |properties|
       stdin.print @text
       stdin.close
       @res = stdout.read
-      @res.blank?
+      if @res.blank?
+        true
+      else
+        $logger.warn "Spell check error #{@res.squish} in #{path.squish}, text: #{@text.squish}."
+        false
+      end
     else
       true
     end
@@ -56,7 +61,12 @@ RSpec::Matchers.define :pass_existence_check do |properties|
     $logger.info "PASS_EXISTENCE_CHECK #{path}"
     @uri = Addressable::URI.parse(Capybara.app_host) + Addressable::URI.parse(path)
     @resp= Faraday.new().get(@uri)
-    (200..299).include? @resp.status
+    if (200..299).include? @resp.status
+      true
+    else
+      $logger.warn "path existence error #{@resp.status} for #{@uri}"
+      false
+    end
   end
   failure_message do |path|
     "Expected that getting #{path} would be OK, but it returns #{@resp.status}"
@@ -69,7 +79,12 @@ RSpec::Matchers.define :be_an_existing_uri do
     if uri.scheme =~ /^http/
       $logger.info "GET check #{uri}"
       @resp= Faraday.new(ssl: {verify: false}).get(uri)
-      (200..399).include? @resp.status
+      if (200..399).include? @resp.status
+        true
+      else
+        $logger.warn "path existence error #{@resp.status} for #{uri}"
+        false
+      end
     else
       true
     end
